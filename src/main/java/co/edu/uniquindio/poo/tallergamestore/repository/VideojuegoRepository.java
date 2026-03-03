@@ -25,4 +25,10 @@ public interface VideojuegoRepository extends JpaRepository<Videojuego,Long> {
     @Query(value = "SELECT * FROM videojuego ORDER BY fecha_creacion DESC LIMIT 5",
             nativeQuery = true)
     List<Videojuego> ultimos5();
+
+    @Query("SELECT v FROM Videojuego v WHERE v.precio BETWEEN :min AND :max")
+    List<Videojuego> buscarPorRangoDePrecio(
+            @Param("min") Double min,
+            @Param("max") Double max);
+
 }

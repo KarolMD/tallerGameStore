@@ -60,4 +60,65 @@ public class VideojuegoService {
         v.setPrecioConIva(v.getPrecio() * 1.19);
         return v;
     }
+    public void eliminar(Long id) {
+        Videojuego videojuego = repo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Videojuego no encontrado"));
+
+        repo.delete(videojuego);
+    }
+
+    public List<Videojuego> buscarPorRango(Double min, Double max) {
+        return repo.buscarPorRangoDePrecio(min, max);
+    }
+
+    public List<Videojuego> buscarPorTitulo(String titulo) {
+        return repo
+                .findByTituloContainingIgnoreCase(titulo);
+    }
+
+    private void validar(Videojuego videojuego) {
+
+        if (videojuego.getTitulo() == null || videojuego.getTitulo().isBlank()) {
+            throw new IllegalArgumentException("El título no puede estar vacío");
+        }
+
+        if (videojuego.getPrecio() == null || videojuego.getPrecio() < 0) {
+            throw new IllegalArgumentException("El precio no puede ser negativo");
+        }
+
+        if (videojuego.getCodigoRegistro() == null || videojuego.getCodigoRegistro().isBlank()) {
+            throw new IllegalArgumentException("El código de registro es obligatorio");
+        }
+
+        if (videojuego.getDesarrolladora() == null ||
+                videojuego.getDesarrolladora().getId() == null) {
+            throw new IllegalArgumentException("Debe asignar una desarrolladora válida");
+        }
+    }
+
+    public Videojuego actualizar(Long id, Videojuego nuevo) {
+
+        Videojuego existente = repo.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Videojuego no encontrado"));
+
+        validar(nuevo);
+
+        existente.setTitulo(nuevo.getTitulo());
+        existente.setPrecio(nuevo.getPrecio());
+        existente.setGenero(nuevo.getGenero());
+        existente.setCodigoRegistro(nuevo.getCodigoRegistro());
+        Desarrolladora desarrolladora = desarrolladoraRepo
+                .findById(nuevo.getDesarrolladora().getId())
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("La desarrolladora no existe"));
+
+        existente.setDesarrolladora(desarrolladora);
+
+        Videojuego actualizado = repo.save(existente);
+
+        calcularIva(actualizado);
+
+        return actualizado;
+    }
 }
